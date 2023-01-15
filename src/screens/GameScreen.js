@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { Alert, FlatList, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import NumberContainer from "../components/game/NumberContainer";
 import Card from "../components/ui/Card";
 import IntructionText from "../components/ui/InstructionText";
 import PrimaryButton from "../components/ui/PrimaryButton";
 import Title from "../components/ui/Title";
+import GuessLogItem from "../components/game/GuessLogItem";
 
 function generateRandomBetween(min, max, exclude) {
   const rndNum = Math.floor(Math.random() * (max - min)) + min;
@@ -27,12 +28,18 @@ export default function GameScreen({ userNumber, onGameOver }) {
     userNumber
   );
   const [currentGuess, setGuess] = useState(initialGuess);
+  const [guessRounds, setGuessRounds] = useState([initialGuess]);
 
   useEffect(() => {
     if (currentGuess === userNumber) {
-      onGameOver();
+      onGameOver(guessRounds.length);
     }
   }, [currentGuess, userNumber, onGameOver]);
+
+  useEffect(() => {
+    minBoundary = 1;
+    maxBoundary = 100;
+  }, []);
 
   function nextGuessHandler(direction) {
     if (
@@ -60,7 +67,10 @@ export default function GameScreen({ userNumber, onGameOver }) {
     );
 
     setGuess(newRandomNumber);
+    setGuessRounds((prevGuessRound) => [newRandomNumber, ...prevGuessRound]);
   }
+
+  const guessRoundLength = guessRounds.length;
 
   return (
     <View style={styles.screen}>
@@ -83,7 +93,18 @@ export default function GameScreen({ userNumber, onGameOver }) {
           </View>
         </View>
       </Card>
-      {/* <View>Log Round</View> */}
+      <View style={styles.listContainer}>
+        <FlatList
+          data={guessRounds}
+          renderItem={(item) => (
+            <GuessLogItem
+              randomNumber={guessRoundLength - item.index}
+              guess={item.item}
+            />
+          )}
+          keyExtractor={(item) => item}
+        />
+      </View>
     </View>
   );
 }
@@ -101,5 +122,9 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
+  },
+  listContainer: {
+    flex: 1,
+    padding: 16,
   },
 });
